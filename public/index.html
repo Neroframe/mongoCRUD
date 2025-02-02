@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <h2>User Management</h2>
+
+    <!-- Search Input -->
+    <input type="text" id="search" placeholder="Search by Name" />
+    <button onclick="fetchUsers()">Search</button>
+
+    <br />
+    <br />
+
+    <!-- Sorting -->
+    <select id="sortBy">
+      <option value="">Sort By</option>
+      <option value="name">Name</option>
+      <option value="age">Age</option>
+    </select>
+    <select id="order">
+      <option value="asc">Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
+    <button onclick="fetchUsers()">Sort</button>
+
+    <hr />
+    <!-- User Form -->
+    <form id="userForm">
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="number" id="age" placeholder="Age" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <button type="submit">Add User</button>
+    </form>
+
+    <!-- Users List -->
+    <h3>Users List</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+
+    <!-- Pagination -->
+    <button id="prevPage" onclick="changePage(-1)">Previous</button>
+    <span id="pageNumber">Page 1</span>
+    <button id="nextPage" onclick="changePage(1)">Next</button>
+
+    <script>
+      const apiUrl = "http://localhost:5000/api/users";
+      let currentPage = 1;
+
+      document
+        .getElementById("userForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const name = document.getElementById("name").value;
+          const age = document.getElementById("age").value;
+          const email = document.getElementById("email").value;
+
+          await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, age, email }),
+          });
+          fetchUsers();
+        });
+
+      async function fetchUsers(page = 1) {
+        currentPage = page;
+        const search = document.getElementById("search").value;
+        const sortBy = document.getElementById("sortBy").value;
+        const order = document.getElementById("order").value;
+
+        const url = new URL(apiUrl);
+        url.searchParams.append("page", page);
+        url.searchParams.append("limit", 5);
+        if (search) url.searchParams.append("search", search);
+        if (sortBy) url.searchParams.append("sortBy", sortBy);
+        if (order) url.searchParams.append("order", order);
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById("userTable").innerHTML = data.users
+          .map(
+            (user) =>
+              `<tr>
+                    <td>${user.name}</td>
+                    <td>${user.age}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <button onclick="deleteUser('${user._id}')">Delete</button>
+                    </td>
+                </tr>`
+          )
+          .join("");
+
+        document.getElementById(
+          "pageNumber"
+        ).innerText = `Page ${data.currentPage} of ${data.totalPages}`;
+        document.getElementById("prevPage").disabled = data.currentPage === 1;
+        document.getElementById("nextPage").disabled =
+          data.currentPage === data.totalPages;
+      }
+
+      async function deleteUser(id) {
+        await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+        fetchUsers();
+      }
+
+      function changePage(offset) {
+        fetchUsers(currentPage + offset);
+      }
+
+      fetchUsers();
+    </script>
+  </body>
+</html>
