@@ -18,7 +18,7 @@ This is a simple user management web application that allows you to Create, Read
 Install Node.js from https://nodejs.org/en/download/
 Install MongoDB (Compass or Atlas) from https://www.mongodb.com/try/download/compass
 
-Clone the repository: `git clone https://github.com/neroframe/mongo-crud-app.git`
+Clone the repository: `git clone https://github.com/Neroframe/mongoCRUD`
 then `cd mongo-crud-app`
 
 Install dependencies: `npm install`
