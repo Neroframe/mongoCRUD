@@ -47,12 +47,18 @@ router.get('/users', async (req, res) => {
 // Update User
 router.put('/users/:id', async (req, res) => {
     try {
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { name, age, email } = req.body;
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id, 
+            { name, age, email },
+            { new: true } 
+        );
         res.json(updatedUser);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
 
 // Delete User
 router.delete('/users/:id', async (req, res) => {

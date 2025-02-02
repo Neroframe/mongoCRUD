@@ -30,12 +30,24 @@
     <button onclick="fetchUsers()">Sort</button>
 
     <hr />
+
     <!-- User Form -->
     <form id="userForm">
       <input type="text" id="name" placeholder="Name" required />
       <input type="number" id="age" placeholder="Age" required />
       <input type="email" id="email" placeholder="Email" required />
       <button type="submit">Add User</button>
+    </form>
+
+    <!-- Edit User Form (Hidden Initially) -->
+    <form id="editForm" style="display: none">
+      <h3>Edit User</h3>
+      <input type="hidden" id="editUserId" />
+      <input type="text" id="editName" placeholder="Name" required />
+      <input type="number" id="editAge" placeholder="Age" required />
+      <input type="email" id="editEmail" placeholder="Email" required />
+      <button type="submit">Save Changes</button>
+      <button type="button" onclick="cancelEdit()">Cancel</button>
     </form>
 
     <!-- Users List -->
@@ -61,21 +73,19 @@
       const apiUrl = "http://localhost:5000/api/users";
       let currentPage = 1;
 
-      document
-        .getElementById("userForm")
-        .addEventListener("submit", async (event) => {
-          event.preventDefault();
-          const name = document.getElementById("name").value;
-          const age = document.getElementById("age").value;
-          const email = document.getElementById("email").value;
+      document.getElementById("userForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const name = document.getElementById("name").value;
+        const age = document.getElementById("age").value;
+        const email = document.getElementById("email").value;
 
-          await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, age, email }),
-          });
-          fetchUsers();
+        await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, age, email }),
         });
+        fetchUsers();
+      });
 
       async function fetchUsers(page = 1) {
         currentPage = page;
@@ -101,18 +111,16 @@
                     <td>${user.age}</td>
                     <td>${user.email}</td>
                     <td>
-                        <button onclick="deleteUser('${user._id}')">Delete</button>
+                        <button onclick="editUser('${user._id}', '${user.name}', '${user.age}', '${user.email}')">Edit</button>
+                        <button class="delete" onclick="deleteUser('${user._id}')">Delete</button>
                     </td>
                 </tr>`
           )
           .join("");
 
-        document.getElementById(
-          "pageNumber"
-        ).innerText = `Page ${data.currentPage} of ${data.totalPages}`;
+        document.getElementById("pageNumber").innerText = `Page ${data.currentPage} of ${data.totalPages}`;
         document.getElementById("prevPage").disabled = data.currentPage === 1;
-        document.getElementById("nextPage").disabled =
-          data.currentPage === data.totalPages;
+        document.getElementById("nextPage").disabled = data.currentPage === data.totalPages;
       }
 
       async function deleteUser(id) {
@@ -122,6 +130,37 @@
 
       function changePage(offset) {
         fetchUsers(currentPage + offset);
+      }
+
+      function editUser(id, name, age, email) {
+        document.getElementById("editUserId").value = id;
+        document.getElementById("editName").value = name;
+        document.getElementById("editAge").value = age;
+        document.getElementById("editEmail").value = email;
+
+        document.getElementById("editForm").style.display = "block";
+      }
+
+      document.getElementById("editForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const id = document.getElementById("editUserId").value;
+        const name = document.getElementById("editName").value;
+        const age = document.getElementById("editAge").value;
+        const email = document.getElementById("editEmail").value;
+
+        await fetch(`${apiUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, age, email }),
+        });
+
+        document.getElementById("editForm").style.display = "none";
+        fetchUsers();
+      });
+
+      function cancelEdit() {
+        document.getElementById("editForm").style.display = "none";
       }
 
       fetchUsers();
